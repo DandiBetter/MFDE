@@ -1,0 +1,44 @@
+{
+  "implementation": "mfde_manuscript_reference_v10",
+  "dataset": "PANDA",
+  "task": "source_to_target",
+  "seed": 42,
+  "split_csv": "${MFDE_SPLIT_CSV}",
+  "feature_dirs": {
+    "uni": "${MFDE_UNI_FEATURES}",
+    "gigapath": "${MFDE_GIGAPATH_FEATURES}",
+    "phikon": "${MFDE_PHIKON_FEATURES}"
+  },
+  "num_classes": 6,
+  "embed_dim": 1024,
+  "attention_dim": 512,
+  "attention_heads": 4,
+  "attention_dropout": 0.25,
+  "num_prototypes": 32,
+  "ema_decay": 0.999,
+  "optimizer": "Adam",
+  "lr": 0.0002,
+  "weight_decay": 1e-05,
+  "epochs": 30,
+  "virtual_batch_size": 1,
+  "device": "cuda",
+  "output_dir": "runs/baseline",
+  "objective": {
+    "prior_implementation": "manuscript_reference",
+    "lambda_aux": 0.5,
+    "lambda_route": 1.0,
+    "lambda_reg_effective": 1.0,
+    "routing_temperature": 0.1,
+    "lambda_main": 1.0,
+    "use_logit_norm": false,
+    "logit_norm_temperature": 0.1
+  },
+  "engine": {
+    "oracle_reporting": false,
+    "early_stopping_patience": null,
+    "parameter_averaging_start_update": null,
+    "binary_threshold": 0.5,
+    "export_predictions": true,
+    "export_attention": false
+  }
+}

@@ -1,0 +1,9 @@
+runs/
+data/
+*.pt
+*.pth
+.env
+configs/local*.json
+__pycache__/
+*.pyc
+.idea/
