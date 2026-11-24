@@ -18,13 +18,43 @@ Inputs are frozen patch-feature tensors and a split CSV. Outputs include a sourc
 
 ## Release status and TODO
 
-The organized MFDE network and the current training, evaluation, and sensitivity utilities are included here. Public release of the complete reproducibility package is in preparation. Complete code and pretrained models will be released after publication.
+The files in this repository provide the following implementation materials.
 
-- [ ] Publish the MFDE pipeline with consistent concept-based module names.
-- [ ] Publish the complete training and evaluation package and final pool-selection utilities.
-- [ ] Publish pretrained model/checkpoint specifications, trained MFDE checkpoints, and reproduction instructions.
-- [ ] Complete and publish the remaining parameter settings, strategy details, and experiment configurations.
-- [ ] Publish the final split/protocol manifests and evaluation instructions.
+| Material | Files |
+| --- | --- |
+| MFDE network, pooling, routing, and fusion | `mfde/network.py`, `mfde/components.py` |
+| Training objective and EMA teacher | `mfde/objective.py`, `mfde/prior_preservation.py` |
+| Data loading, training, evaluation, and checkpoint selection | `mfde/data.py`, `train.py`, `mfde/multi_engine.py` |
+| Example configuration and dependencies | `configs/base.json`, `requirements.txt` |
+| Sensitivity analysis and checkpoint-key conversion | `experiments/make_sweep.py`, `experiments/run_sweep.py`, `experiments/plot_sensitivity.py`, `experiments/convert_state_dict.py` |
+| Synthetic implementation tests | `tests/test_mfde.py`, `tests/test_engine.py` |
+
+### Currently disclosed parameters
+
+`configs/base.json` specifies the following baseline settings; architectural operations are implemented in `mfde/network.py` and `mfde/components.py`.
+
+| Setting | Publicly specified value |
+| --- | --- |
+| Example encoder pool | UNI, GigaPath, Phikon-v2 feature inputs |
+| Shared feature dimension | 1024 |
+| Prototype count | 32 |
+| MIL attention hidden dimension / heads / dropout | 512 / 4 / 0.25 |
+| Prototype-remapping / cross-model attention heads | 4 / 4 (network implementation) |
+| Optimizer / learning rate / weight decay | Adam / 0.0002 / 0.00001 |
+| Schedule / epochs | Cosine decay (`train.py`) / 30 |
+| Effective slide bags per optimizer update | 1 |
+| EMA momentum | 0.999 |
+| Routing-target temperature | 0.1 |
+| Main / auxiliary / routing / effective regularization coefficients | 1.0 / 0.5 / 1.0 / 1.0 |
+| Example seed | 42 |
+
+The auxiliary loss is defined as 0.3 times the sum of branch cross-entropies in `mfde/objective.py`, before applying the auxiliary coefficient of 0.5. Prior preservation and fused-feature consistency are equally weighted inside the regularization term. The sensitivity generator discloses the parameter ranges and uses seeds 42, 43, and 44 for new runs; these are example run settings, not a record of the complete historical experiments.
+
+### Materials remaining for release
+
+The complete set of experiment-specific configurations and run records, final split/protocol manifests, automated pool-selection utilities, trained MFDE checkpoints, and full reproduction instructions remain to be released after publication. These materials complement the core hyperparameters already disclosed above. The current repository contains no pretrained encoder weights, trained MFDE checkpoints, extracted features, or datasets. Third-party encoder weights are obtained from their original providers; the planned MFDE release concerns our implementation and reproduction materials.
+
+The current preservation objective is the explicitly named `manuscript_reference` implementation. The historical external `cal_reg_loss` and `MCCHandler` dependencies and full SWAD valley-selection policy are not included in this snapshot. `source_manifest.json` and `ENGINE_INTEGRATION.json` record the earlier integration state; their historical hashes have been retained.
 
 ## Evaluation and model-pool protocol
 
@@ -103,8 +133,8 @@ The supplied engine's external `cal_reg_loss` and `MCCHandler` dependencies rema
 
 The three sweep axes are prototype count K = 8, 16, 32, 64, 128; routing-target temperature tau = 0.025, 0.05, 0.1, 0.2, 0.4; and effective prior-preservation coefficient lambda = 0, 0.25, 0.5, 1, 2. Other settings are held fixed. The zero coefficient is an ablation endpoint. Baseline settings are K=32, tau=0.1 and lambda=1. The complete design has 13 unique configurations per source task and seed because the baseline is shared by all axes. The generator creates three seeds (42, 43, 44) for NEW runs; replace these consistently if matching historical seeds is required.
 
-The author-supplied aggregate sensitivity results and the corresponding 1-by-3 figure are included in `experiments/reported_results/`. The CSV contains dataset, parameter axis, parameter value, Oracle-selected target mean AUC, and ID-selected target mean AUC. These aggregate records support analysis of K = 32, tau = 0.1, and effective lambda = 1. The regularization-zero records agree with the component-ablation results. The run-level plotting utility above accepts seed/task records and computes its own aggregation; the supplied aggregate CSV has a separate, documented schema. Read experiments/EXPERIMENTS.md for the run-level workflow.
+The sensitivity utilities require measured run results supplied by the user. The current repository does not include `experiments/reported_results/` or `experiments/EXPERIMENTS.md`; the paper's aggregate sensitivity results are not distributed in this snapshot.
 
 ## Verification
 
-Run `python -m unittest discover -s tests -v`. Synthetic tests cover forward gradients, effective coefficient scaling, partial accumulation groups, EMA updates, independent ID/Oracle selection, source-based early stopping, averaged checkpoint consistency, attention export, multiclass metrics, and the complete training entry point. Implementation provenance, the reference objective, and checkpoint-key conversion are documented in PROVENANCE.md.
+Run `python -m unittest discover -s tests -v`. Synthetic tests cover forward gradients, effective coefficient scaling, partial accumulation groups, EMA updates, independent ID/Oracle selection, source-based early stopping, averaged checkpoint consistency, attention export, multiclass metrics, and the complete training entry point. Historical provenance is recorded in `source_manifest.json` and `ENGINE_INTEGRATION.json`; `PROVENANCE.md` is not included in this snapshot. The reference objective and conversion utility are available in `mfde/prior_preservation.py` and `experiments/convert_state_dict.py`.
